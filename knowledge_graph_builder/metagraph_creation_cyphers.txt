@@ -1,0 +1,41 @@
+# Connect to Neo4j browser and execute these cyphers to create the sample metagraph
+
+
+MERGE (e:ENTITY {Name: 'Patient'})
+MERGE (p1:PROPERTY {Name: 'Patient_ID'}) MERGE (e)-[:HAS_PROPERTY {Is_Key_Property: True, Source_Table: 'Patient_Visits', Source_Column: 'Patient_ID'}]->(p1) MERGE (p2:PROPERTY {Name: 'Patient_Name'}) MERGE (e)-[:HAS_PROPERTY {Is_Key_Property: False, Source_Table: 'Patient_Visits', Source_Column: 'Patient_Name'}]->(p2) MERGE (p3:PROPERTY {Name: 'Patient_Age'}) MERGE (e)-[:HAS_PROPERTY {Is_Key_Property: False, Source_Table: 'Patient_Visits', Source_Column: 'Patient_Age'}]->(p3) ;
+
+
+MERGE (e:ENTITY {Name: 'Doctor'})
+MERGE (p1:PROPERTY {Name: 'Doctor_ID'}) MERGE (e)-[:HAS_PROPERTY {Is_Key_Property: True, Source_Table: 'Doctors_Record', Source_Column: 'Doctor_ID'}]->(p1) MERGE (p2:PROPERTY {Name: 'Doctor_Name'}) MERGE (e)-[:HAS_PROPERTY {Is_Key_Property: False, Source_Table: 'Doctors_Record', Source_Column: 'Doctor_Name'}]->(p2) MERGE (p3:PROPERTY {Name: 'Specialization'}) MERGE (e)-[:HAS_PROPERTY {Is_Key_Property: False, Source_Table: 'Doctors_Record', Source_Column: 'Specialization'}]->(p3) ;
+
+
+MERGE (e:ENTITY {Name: 'Appointment'})
+MERGE (p1:PROPERTY {Name: 'Appointment_ID'}) MERGE (e)-[:HAS_PROPERTY {Is_Key_Property: True, Source_Table: 'Patient_Visits', Source_Column: 'Appointment_ID'}]->(p1) MERGE (p2:PROPERTY {Name: 'Appointment_Date'}) MERGE (e)-[:HAS_PROPERTY {Is_Key_Property: False, Source_Table: 'Patient_Visits', Source_Column: 'Appointment_Date'}]->(p2) ;
+
+
+MERGE (e:ENTITY {Name: 'Prescription'})
+MERGE (p1:PROPERTY {Name: 'Prescription_ID'}) MERGE (e)-[:HAS_PROPERTY {Is_Key_Property: True, Source_Table: 'Prescription_Record', Source_Column: 'Prescription_ID'}]->(p1) MERGE (p2:PROPERTY {Name: 'Diagnosis'}) MERGE (e)-[:HAS_PROPERTY {Is_Key_Property: False, Source_Table: 'Prescription_Record', Source_Column: 'Diagnosis'}]->(p2) MERGE (p3:PROPERTY {Name: 'Treatment'}) MERGE (e)-[:HAS_PROPERTY {Is_Key_Property: False, Source_Table: 'Prescription_Record', Source_Column: 'Treatment'}]->(p3) ;
+
+
+MATCH (s:ENTITY {Name: 'Patient'}), (t:ENTITY {Name: 'Appointment'})
+MERGE (r:RELATIONSHIP {Name: 'Has_Appointment', Joining_Condition: ''})
+MERGE (r)-[:CONNECTS_FROM {Source_Property: 'Patient_ID', Source_Table: 'Patient_Visits', Source_Column: 'Patient_ID'}]->(s)
+MERGE (r)-[:CONNECTS_TO {Target_Property: 'Appointment_ID', Target_Table: 'Patient_Visits', Target_Column: 'Appointment_ID'}]->(t);
+
+
+MATCH (s:ENTITY {Name: 'Doctor'}), (t:ENTITY {Name: 'Appointment'})
+MERGE (r:RELATIONSHIP {Name: 'Conducts', Joining_Condition: ''})
+MERGE (r)-[:CONNECTS_FROM {Source_Property: 'Doctor_ID', Source_Table: 'Patient_Visits', Source_Column: 'Doctor_ID'}]->(s)
+MERGE (r)-[:CONNECTS_TO {Target_Property: 'Appointment_ID', Target_Table: 'Patient_Visits', Target_Column: 'Appointment_ID'}]->(t);
+
+
+MATCH (s:ENTITY {Name: 'Appointment'}), (t:ENTITY {Name: 'Prescription'})
+MERGE (r:RELATIONSHIP {Name: 'Results_In', Joining_Condition: ''})
+MERGE (r)-[:CONNECTS_FROM {Source_Property: 'Appointment_ID', Source_Table: 'Prescription_Record', Source_Column: 'Appointment_ID'}]->(s)
+MERGE (r)-[:CONNECTS_TO {Target_Property: 'Prescription_ID', Target_Table: 'Prescription_Record', Target_Column: 'Prescription_ID'}]->(t);
+
+
+MATCH (s:ENTITY {Name: 'Doctor'}), (t:ENTITY {Name: 'Prescription'})
+MERGE (r:RELATIONSHIP {Name: 'Prescribes', Joining_Condition: 'Patient_Visits.Appointment_ID==Prescription_Record.Appointment_ID'})
+MERGE (r)-[:CONNECTS_FROM {Source_Property: 'Doctor_ID', Source_Table: 'Patient_Visits', Source_Column: 'Doctor_ID'}]->(s)
+MERGE (r)-[:CONNECTS_TO {Target_Property: 'Prescription_ID', Target_Table: 'Prescription_Record', Target_Column: 'Prescription_ID'}]->(t);
